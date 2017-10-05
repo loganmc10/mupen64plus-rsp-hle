@@ -159,8 +159,14 @@ void rsp_break(struct hle_t* hle, unsigned int setbits)
 
 static void forward_gfx_task(struct hle_t* hle)
 {
+    *hle->sp_status |= SP_STATUS_TASKDONE | SP_STATUS_BROKE | SP_STATUS_HALT;
+  
     HleProcessDlistList(hle->user_defined);
-    rsp_break(hle, SP_STATUS_TASKDONE);
+  
+    if ((*hle->sp_status & SP_STATUS_INTR_ON_BREAK)) {
+        *hle->mi_intr |= MI_INTR_SP;
+        HleCheckInterrupts(hle->user_defined);
+    }
 }
 
 static bool try_fast_audio_dispatching(struct hle_t* hle)
